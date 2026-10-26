@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: car-parking-project
+    runtime: python
+    buildCommand: pip install -r requirements.txt && python database/seed_data.py
+    startCommand: gunicorn run:app
+    envVars:
+      - key: ENABLE_SQLITE_FALLBACK
+        value: "True"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: PAYMENT_SANDBOX_MODE
+        value: "True"
