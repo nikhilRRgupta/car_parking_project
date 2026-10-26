@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Smart Vehicle Parking Management System{% endblock %}</title>
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome 6 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/barrier.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Top Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow-sm">
+        <div class="container-fluid px-lg-4">
+            <a class="navbar-brand d-flex align-items-center" href="{{ url_for('public.index') }}">
+                <span class="brand-icon"><i class="fas fa-parking"></i></span>
+                <span>Smart<span class="text-primary">Park</span></span>
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarMain">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{{ url_for('public.index') }}">
+                            <i class="fas fa-th me-1"></i> Live Availability
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('booking.book_slot') }}">
+                            <i class="fas fa-calendar-check me-1"></i> Book Slot
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('public.find_pass') }}">
+                            <i class="fas fa-qrcode me-1"></i> Find Pass
+                        </a>
+                    </li>
+                    <!-- Gate Operations Dropdown -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle text-warning" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-traffic-light me-1"></i> Barrier Gates
+                        </a>
+                        <ul class="dropdown-menu shadow">
+                            <li><a class="dropdown-item" href="{{ url_for('gate.entry_station') }}"><i class="fas fa-door-open text-success me-2"></i>Entry Terminal</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('gate.exit_station') }}"><i class="fas fa-door-closed text-danger me-2"></i>Exit Terminal & Bill</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ url_for('gate.barrier_simulator') }}"><i class="fas fa-gamepad text-primary me-2"></i>Dual Barrier Simulator</a></li>
+                        </ul>
+                    </li>
+                    <!-- Admin Panel Dropdown -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-shield-alt me-1"></i> Admin Portal
+                        </a>
+                        <ul class="dropdown-menu shadow">
+                            <li><a class="dropdown-item" href="{{ url_for('admin.dashboard') }}"><i class="fas fa-chart-line me-2"></i>Dashboard & Analytics</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('admin.slots_manager') }}"><i class="fas fa-layer-group me-2"></i>Slot Management</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('admin.pricing_manager') }}"><i class="fas fa-tags me-2"></i>Pricing Rules</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('admin.bookings_manager') }}"><i class="fas fa-list-alt me-2"></i>Bookings History</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('admin.sessions_manager') }}"><i class="fas fa-stopwatch me-2"></i>Active Sessions</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('admin.audit_logs') }}"><i class="fas fa-history me-2"></i>Barrier Audit Logs</a></li>
+                        </ul>
+                    </li>
+                </ul>
+
+                <!-- Right Utility -->
+                <div class="d-flex align-items-center gap-2">
+                    <a href="{{ url_for('public.live_slots') }}" class="btn btn-outline-info btn-sm">
+                        <i class="fas fa-tv me-1"></i> Kiosk View
+                    </a>
+
+                    {% if is_logged_in %}
+                        <div class="dropdown">
+                            <button class="btn btn-primary btn-sm dropdown-toggle d-flex align-items-center gap-2" data-bs-toggle="dropdown">
+                                <i class="fas fa-user-circle"></i>
+                                <span>{{ current_user.full_name if current_user else 'My Account' }}</span>
+                                <span class="badge bg-light text-dark text-uppercase ms-1" style="font-size:0.65rem;">{{ current_user.role if current_user else '' }}</span>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow">
+                                {% if is_admin or is_attendant %}
+                                    <li><a class="dropdown-item" href="{{ url_for('admin.dashboard') }}"><i class="fas fa-tachometer-alt me-2"></i>Admin Dashboard</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                {% endif %}
+                                <li><a class="dropdown-item text-danger" href="{{ url_for('auth.logout') }}"><i class="fas fa-sign-out-alt me-2"></i>Sign Out</a></li>
+                            </ul>
+                        </div>
+                    {% else %}
+                        <a href="{{ url_for('auth.login') }}" class="btn btn-outline-light btn-sm">
+                            <i class="fas fa-sign-in-alt me-1"></i> Sign In
+                        </a>
+                        <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-user-plus me-1"></i> Register
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Notifications Container -->
+    <div class="container-fluid px-lg-4 mt-3">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category if category != 'message' else 'info' }} alert-dismissible fade show shadow-sm" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Main Content Block -->
+    <main class="container-fluid px-lg-4 py-3">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-top py-3 mt-auto">
+        <div class="container-fluid px-lg-4 d-flex flex-column flex-md-row justify-content-between align-items-center gap-2 text-muted small">
+            <div>
+                <strong>SmartPark &copy; 2026</strong> &bull; Automated Intelligent Vehicle Parking Management System
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <span><i class="fas fa-circle text-success me-1"></i> System Online</span>
+                <span><i class="fas fa-shield-alt text-primary me-1"></i> Sandbox Mode</span>
+                <a href="{{ url_for('gate.barrier_simulator') }}" class="text-decoration-none text-muted"><i class="fas fa-robot me-1"></i> Barrier Sim</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5.3 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Chart.js 4 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

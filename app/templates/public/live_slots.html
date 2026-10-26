@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block title %}Live Parking Display Board (Kiosk View) - SmartPark{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h3 class="fw-bold mb-0"><i class="fas fa-desktop text-info me-2"></i>Live Parking Status Display Board</h3>
+        <p class="text-muted small mb-0">Public real-time occupancy monitor for entryway digital displays.</p>
+    </div>
+    <div class="text-end">
+        <span class="badge bg-success px-3 py-2 fs-6">
+            <i class="fas fa-satellite-dish me-1"></i> Live Stream Active
+        </span>
+    </div>
+</div>
+
+<!-- Parking Full Alert (Dynamic) -->
+<div id="parking-full-banner" class="alert parking-full-alert shadow-sm py-3 px-4 rounded-3 mb-4 {% if not is_full %}d-none{% endif %}">
+    <div class="d-flex align-items-center">
+        <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
+        <div>
+            <h4 class="alert-heading mb-1 fw-bold">PARKING FULL!</h4>
+            <p class="mb-0">All slots are occupied. Entry gates will hold until slots are released.</p>
+        </div>
+    </div>
+</div>
+
+<!-- Giant KPI Counters -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white p-3 text-center rounded-3 shadow-sm">
+            <div class="text-uppercase small fw-bold opacity-75">Total Capacity</div>
+            <div class="display-5 fw-bold" id="count-total">{{ total }}</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white p-3 text-center rounded-3 shadow-sm">
+            <div class="text-uppercase small fw-bold opacity-75">Available Slots</div>
+            <div class="display-5 fw-bold" id="count-available">{{ available }}</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-danger text-white p-3 text-center rounded-3 shadow-sm">
+            <div class="text-uppercase small fw-bold opacity-75">Occupied Slots</div>
+            <div class="display-5 fw-bold" id="count-occupied">{{ occupied }}</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-dark p-3 text-center rounded-3 shadow-sm">
+            <div class="text-uppercase small fw-bold opacity-75">Reserved (Hold)</div>
+            <div class="display-5 fw-bold" id="count-reserved">{{ reserved }}</div>
+        </div>
+    </div>
+</div>
+
+<!-- Full Screen Grid -->
+<div class="card shadow-sm border-0">
+    <div class="card-body p-4">
+        <div class="slot-grid" id="live-slot-grid">
+            {% for slot in slots %}
+                <div class="slot-box status-{{ slot.status|lower }}"
+                     id="slot-card-{{ slot.id }}"
+                     data-vehicle-type="{{ slot.vehicle_type }}"
+                     data-floor-zone="{{ slot.floor_zone }}"
+                     data-is-ev="{{ 'true' if slot.is_ev else 'false' }}">
+                    
+                    <span class="slot-badge-type">
+                        {% if slot.is_ev %}
+                            <i class="fas fa-charging-station text-success"></i>
+                        {% elif slot.vehicle_type == '2-wheeler' %}
+                            <i class="fas fa-motorcycle text-warning"></i>
+                        {% else %}
+                            <i class="fas fa-car text-primary"></i>
+                        {% endif %}
+                    </span>
+
+                    <div class="slot-number">{{ slot.slot_number }}</div>
+                    <div class="slot-status-label">{{ slot.status }}</div>
+                    <div class="text-muted" style="font-size:0.65rem;">{{ slot.floor_zone }}</div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/live_availability.js') }}"></script>
+{% endblock %}

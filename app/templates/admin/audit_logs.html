@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block title %}Barrier Audit Logs - SmartPark Admin{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold mb-1"><i class="fas fa-history text-primary me-2"></i>Barrier Gate Security Audit Trail</h3>
+        <p class="text-muted small mb-0">Immutable records of every automated boom barrier operation, access denial, and manual staff override.</p>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 small">
+                <thead class="table-light">
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>Gate Terminal</th>
+                        <th>Vehicle Number</th>
+                        <th>Booking Pass</th>
+                        <th>Barrier Action</th>
+                        <th>Reason / System Message</th>
+                        <th>Operator</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                        <tr>
+                            <td>{{ log.timestamp.strftime('%Y-%m-%d %I:%M:%S %p') }}</td>
+                            <td>
+                                <span class="badge {% if log.gate_type == 'ENTRY' %}bg-success bg-opacity-10 text-success{% else %}bg-danger bg-opacity-10 text-danger{% endif %} border">
+                                    {{ log.gate_type }} GATE
+                                </span>
+                            </td>
+                            <td class="fw-bold font-monospace fs-6">{{ log.vehicle_number }}</td>
+                            <td>{{ log.booking_code or 'N/A' }}</td>
+                            <td>
+                                <span class="badge {% if log.action == 'OPEN' %}bg-success{% elif log.action == 'DENY' %}bg-danger{% else %}bg-warning text-dark{% endif %}">
+                                    {{ log.action }}
+                                </span>
+                            </td>
+                            <td>{{ log.reason }}</td>
+                            <td><span class="badge bg-light text-secondary border">{{ log.operator_name }}</span></td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center py-4 text-muted">No barrier audit logs recorded yet.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+
+{% block title %}Active & Completed Sessions - SmartPark Admin{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold mb-1"><i class="fas fa-stopwatch text-primary me-2"></i>Parking Sessions Monitor</h3>
+        <p class="text-muted small mb-0">Track live in-progress parking sessions and completed stay records.</p>
+    </div>
+</div>
+
+<!-- Active Sessions Table -->
+<div class="card shadow-sm border-0 rounded-4 overflow-hidden mb-4">
+    <div class="card-header bg-dark text-white p-3 d-flex justify-content-between align-items-center">
+        <span class="fw-bold"><i class="fas fa-car-side text-success me-2"></i>Currently Parked Vehicles (Active Stays)</span>
+        <span class="badge bg-success">{{ active_sessions|length }} Active</span>
+    </div>
+
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 small">
+                <thead class="table-light">
+                    <tr>
+                        <th>Vehicle Plate</th>
+                        <th>Slot</th>
+                        <th>Entry Timestamp</th>
+                        <th>Elapsed Time</th>
+                        <th>Prepaid Amount</th>
+                        <th>Booking Pass</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in active_sessions %}
+                        <tr>
+                            <td class="fw-bold font-monospace fs-6">{{ s.vehicle_number }}</td>
+                            <td><span class="badge bg-success">{{ s.slot.slot_number }}</span> ({{ s.slot.floor_zone }})</td>
+                            <td>{{ s.entry_time.strftime('%Y-%m-%d %I:%M %p') }}</td>
+                            <td>
+                                <span class="badge bg-light text-dark border font-monospace">
+                                    {{ s.elapsed_minutes() }} mins
+                                </span>
+                            </td>
+                            <td>₹{{ "%.2f"|format(s.prepaid_amount) }}</td>
+                            <td><code>{{ s.booking.booking_code }}</code></td>
+                            <td>
+                                <form method="POST" action="{{ url_for('gate.exit_station') }}" class="d-inline">
+                                    <input type="hidden" name="identifier" value="{{ s.vehicle_number }}">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="fas fa-sign-out-alt me-1"></i> Process Exit
+                                    </button>
+                                </form>
+                                <a href="{{ url_for('public.view_pass', booking_code=s.booking.booking_code) }}" class="btn btn-sm btn-outline-primary ms-1" target="_blank">
+                                    <i class="fas fa-eye me-1"></i> Live Timer
+                                </a>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="7" class="text-center py-4 text-muted">No active parking sessions in progress.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Completed Sessions Table -->
+<div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+    <div class="card-header bg-white py-3 border-bottom">
+        <h6 class="fw-bold mb-0 text-dark"><i class="fas fa-check-circle text-secondary me-2"></i>Recently Completed Parking Sessions</h6>
+    </div>
+
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 small">
+                <thead class="table-light">
+                    <tr>
+                        <th>Vehicle</th>
+                        <th>Slot</th>
+                        <th>Entry Time</th>
+                        <th>Exit Time</th>
+                        <th>Duration</th>
+                        <th>Prepaid</th>
+                        <th>Extra Overstay</th>
+                        <th>Total Paid</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cs in completed_sessions %}
+                        <tr>
+                            <td class="fw-bold font-monospace">{{ cs.vehicle_number }}</td>
+                            <td>{{ cs.slot.slot_number if cs.slot else 'N/A' }}</td>
+                            <td>{{ cs.entry_time.strftime('%I:%M %p') }}</td>
+                            <td>{{ cs.exit_time.strftime('%I:%M %p') if cs.exit_time else 'N/A' }}</td>
+                            <td>{{ cs.total_duration_minutes }} mins</td>
+                            <td>₹{{ "%.2f"|format(cs.prepaid_amount) }}</td>
+                            <td class="{% if cs.extra_amount and cs.extra_amount > 0 %}text-danger fw-bold{% else %}text-muted{% endif %}">
+                                ₹{{ "%.2f"|format(cs.extra_amount or 0.0) }}
+                            </td>
+                            <td class="fw-bold text-success">₹{{ "%.2f"|format(cs.total_amount) }}</td>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="8" class="text-center py-4 text-muted">No completed sessions logged yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

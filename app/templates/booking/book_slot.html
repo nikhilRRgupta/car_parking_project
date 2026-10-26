@@ -1,0 +1,209 @@
+{% extends 'base.html' %}
+
+{% block title %}Book a Parking Slot - SmartPark{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-9 col-xl-8">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <div>
+                <h3 class="fw-bold mb-0"><i class="fas fa-calendar-check text-primary me-2"></i>Reserve Parking Slot</h3>
+                <p class="text-muted small mb-0">Select your vehicle category, preferred available slot, and reserve online.</p>
+            </div>
+            <a href="{{ url_for('public.index') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-arrow-left me-1"></i> Live Layout
+            </a>
+        </div>
+
+        <div class="card shadow-sm border-0 rounded-4 overflow-hidden mb-4">
+            <div class="card-header bg-dark text-white p-3 d-flex align-items-center justify-content-between">
+                <span class="fw-bold"><i class="fas fa-ticket-alt me-2 text-warning"></i>Online Reservation Form</span>
+                <span class="badge bg-primary">Step 1 of 2: Details & Slot</span>
+            </div>
+
+            <div class="card-body p-4">
+                <form method="POST" action="{{ url_for('booking.book_slot') }}" id="booking-form">
+                    
+                    <!-- Vehicle Type Selection -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold small text-uppercase text-muted">1. Select Vehicle Category</label>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <input type="radio" class="btn-check" name="vehicle_type" id="vtype_4w" value="4-wheeler" {% if selected_type == '4-wheeler' or not selected_type %}checked{% endif %} onchange="updateVehicleFilter('4-wheeler')">
+                                <label class="btn btn-outline-primary p-3 w-100 text-start rounded-3" for="vtype_4w">
+                                    <div class="d-flex align-items-center mb-1">
+                                        <i class="fas fa-car fa-2x me-3"></i>
+                                        <div>
+                                            <div class="fw-bold">4-Wheeler</div>
+                                            <small class="text-muted">Car, Sedan, SUV</small>
+                                        </div>
+                                    </div>
+                                    <div class="mt-2 pt-2 border-top small fw-bold text-primary">₹{{ "%.2f"|format(rules['4-wheeler'].base_rate) }} / {{ rules['4-wheeler'].base_hours }} hrs</div>
+                                </label>
+                            </div>
+
+                            <div class="col-md-4">
+                                <input type="radio" class="btn-check" name="vehicle_type" id="vtype_2w" value="2-wheeler" {% if selected_type == '2-wheeler' %}checked{% endif %} onchange="updateVehicleFilter('2-wheeler')">
+                                <label class="btn btn-outline-warning p-3 w-100 text-start rounded-3" for="vtype_2w">
+                                    <div class="d-flex align-items-center mb-1">
+                                        <i class="fas fa-motorcycle fa-2x me-3"></i>
+                                        <div>
+                                            <div class="fw-bold">2-Wheeler</div>
+                                            <small class="text-muted">Bike, Scooter</small>
+                                        </div>
+                                    </div>
+                                    <div class="mt-2 pt-2 border-top small fw-bold text-warning">₹{{ "%.2f"|format(rules['2-wheeler'].base_rate) }} / {{ rules['2-wheeler'].base_hours }} hrs</div>
+                                </label>
+                            </div>
+
+                            <div class="col-md-4">
+                                <input type="radio" class="btn-check" name="vehicle_type" id="vtype_ev" value="ev" {% if selected_type == 'ev' %}checked{% endif %} onchange="updateVehicleFilter('ev')">
+                                <label class="btn btn-outline-success p-3 w-100 text-start rounded-3" for="vtype_ev">
+                                    <div class="d-flex align-items-center mb-1">
+                                        <i class="fas fa-charging-station fa-2x me-3"></i>
+                                        <div>
+                                            <div class="fw-bold">Electric (EV)</div>
+                                            <small class="text-muted">With Fast Charger</small>
+                                        </div>
+                                    </div>
+                                    <div class="mt-2 pt-2 border-top small fw-bold text-success">₹{{ "%.2f"|format(rules['ev'].base_rate) }} / {{ rules['ev'].base_hours }} hrs</div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Available Slots Picker -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold small text-uppercase text-muted d-flex justify-content-between">
+                            <span>2. Choose Your Available Parking Slot <span class="text-danger">*</span></span>
+                            <span class="badge bg-light text-secondary border" id="slot-selected-display">No slot selected</span>
+                        </label>
+
+                        <input type="hidden" name="slot_id" id="selected_slot_id" value="{{ selected_slot_id or '' }}" required>
+
+                        {% if available_slots %}
+                            <div class="slot-grid p-3 bg-light rounded-3 border" style="max-height: 260px; overflow-y: auto;">
+                                {% for slot in available_slots %}
+                                    <div class="slot-box status-available selectable {% if selected_slot_id == slot.id %}selected{% endif %}"
+                                         onclick="pickSlot('{{ slot.id }}', '{{ slot.slot_number }}', '{{ slot.floor_zone }}', this)"
+                                         id="picker-slot-{{ slot.id }}">
+                                        <span class="slot-badge-type">
+                                            {% if slot.is_ev %}<i class="fas fa-charging-station text-success"></i>
+                                            {% elif slot.vehicle_type == '2-wheeler' %}<i class="fas fa-motorcycle text-warning"></i>
+                                            {% else %}<i class="fas fa-car text-primary"></i>{% endif %}
+                                        </span>
+                                        <div class="slot-number">{{ slot.slot_number }}</div>
+                                        <div class="slot-status-label text-success">AVAILABLE</div>
+                                        <div class="text-muted" style="font-size:0.65rem;">{{ slot.floor_zone }}</div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="alert alert-warning py-3 text-center rounded-3">
+                                <i class="fas fa-exclamation-circle me-1"></i> No available slots for this vehicle category right now. Please select another vehicle type or check back later.
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Vehicle & Duration -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">Vehicle Registration Plate Number <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="fas fa-id-card"></i></span>
+                                <input type="text" name="vehicle_number" class="form-control text-uppercase font-monospace fw-bold" placeholder="e.g. MH12AB1234" required pattern="[A-Za-z0-9\s-]{4,15}" title="Enter valid vehicle registration number">
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">Initial Duration (Hours) <span class="text-danger">*</span></label>
+                            <select name="duration_hours" id="duration_hours" class="form-select" onchange="recalculatePricePreview()">
+                                <option value="4" selected>4 Hours (Standard Base Plan)</option>
+                                <option value="6">6 Hours (+ 2 Extra Hours)</option>
+                                <option value="8">8 Hours (+ 4 Extra Hours)</option>
+                                <option value="12">12 Hours (Half Day)</option>
+                                <option value="24">24 Hours (Full Day)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Customer Contact -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold small">Driver / Owner Name <span class="text-danger">*</span></label>
+                            <input type="text" name="customer_name" class="form-control" value="{{ current_user.full_name if current_user else '' }}" placeholder="Full Name" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold small">Mobile Phone (For Alerts) <span class="text-danger">*</span></label>
+                            <input type="tel" name="customer_phone" class="form-control" value="{{ current_user.phone if current_user else '' }}" placeholder="+91 9876543210" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold small">Email (For Digital Pass) <span class="text-danger">*</span></label>
+                            <input type="email" name="customer_email" class="form-control" value="{{ current_user.email if current_user else '' }}" placeholder="driver@example.com" required>
+                        </div>
+                    </div>
+
+                    <!-- Price Estimate Banner -->
+                    <div class="bg-light p-3 rounded-3 border d-flex justify-content-between align-items-center mb-4">
+                        <div>
+                            <span class="text-muted small text-uppercase fw-bold d-block">Estimated Prepaid Fee</span>
+                            <span class="h4 text-primary fw-bold mb-0" id="preview-total-price">₹50.00</span>
+                            <small class="text-muted ms-2">(Hold duration: 10 mins to complete payment)</small>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-lg px-4 fw-semibold" id="submit-btn" disabled>
+                            Proceed to Pay <i class="fas fa-arrow-right ms-1"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const rates = {
+        '4-wheeler': { base_rate: {{ rules['4-wheeler'].base_rate }}, base_hours: {{ rules['4-wheeler'].base_hours }}, hourly: {{ rules['4-wheeler'].hourly_rate_after_base }} },
+        '2-wheeler': { base_rate: {{ rules['2-wheeler'].base_rate }}, base_hours: {{ rules['2-wheeler'].base_hours }}, hourly: {{ rules['2-wheeler'].hourly_rate_after_base }} },
+        'ev': { base_rate: {{ rules['ev'].base_rate }}, base_hours: {{ rules['ev'].base_hours }}, hourly: {{ rules['ev'].hourly_rate_after_base }} }
+    };
+
+    function updateVehicleFilter(type) {
+        window.location.href = `{{ url_for('booking.book_slot') }}?vehicle_type=${type}`;
+    }
+
+    function pickSlot(slotId, slotNumber, zone, el) {
+        document.querySelectorAll('.slot-box').forEach(b => b.classList.remove('selected'));
+        el.classList.add('selected');
+        document.getElementById('selected_slot_id').value = slotId;
+        document.getElementById('slot-selected-display').innerHTML = `<strong class="text-success">${slotNumber}</strong> (${zone})`;
+        document.getElementById('submit-btn').removeAttribute('disabled');
+        recalculatePricePreview();
+    }
+
+    function recalculatePricePreview() {
+        const vtype = document.querySelector('input[name="vehicle_type"]:checked').value;
+        const hours = parseInt(document.getElementById('duration_hours').value);
+        const rule = rates[vtype] || rates['4-wheeler'];
+        let total = rule.base_rate;
+        if (hours > rule.base_hours) {
+            total += (hours - rule.base_hours) * rule.hourly;
+        }
+        document.getElementById('preview-total-price').textContent = `₹${total.toFixed(2)}`;
+    }
+
+    // Auto-select if slot was preselected
+    document.addEventListener('DOMContentLoaded', () => {
+        const preId = document.getElementById('selected_slot_id').value;
+        if (preId) {
+            const el = document.getElementById(`picker-slot-${preId}`);
+            if (el) {
+                el.classList.add('selected');
+                document.getElementById('submit-btn').removeAttribute('disabled');
+            }
+        }
+        recalculatePricePreview();
+    });
+</script>
+{% endblock %}

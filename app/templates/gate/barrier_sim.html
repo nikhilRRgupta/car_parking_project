@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+
+{% block title %}Dual Boom Barrier Gate Simulator - SmartPark{% endblock %}
+
+{% block content %}
+<div class="row align-items-center mb-3">
+    <div class="col-md-8">
+        <h3 class="fw-bold mb-1"><i class="fas fa-gamepad text-primary me-2"></i>Hardware Barrier Simulation Hub</h3>
+        <p class="text-muted small mb-0">Simulates physical boom barrier microcontrollers (ESP32/Arduino) with visual feedback, LED signals, and audio synthesizers.</p>
+    </div>
+    <div class="col-md-4 text-md-end">
+        <span class="badge bg-primary px-3 py-2">
+            <i class="fas fa-microchip me-1"></i> Microcontroller Sandbox Active
+        </span>
+    </div>
+</div>
+
+<!-- Dual Barrier Simulation Deck -->
+<div class="row g-4 mb-4">
+    <!-- Entry Gate Barrier -->
+    <div class="col-lg-6">
+        <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+            <div class="card-header bg-dark text-white p-3 d-flex justify-content-between align-items-center">
+                <span class="fw-bold"><i class="fas fa-arrow-circle-right text-success me-2"></i>Gate A: Vehicle Entry Station</span>
+                <span class="barrier-status-badge badge-closed" style="font-size:0.75rem;">CLOSED</span>
+            </div>
+
+            <div class="card-body p-4">
+                <div class="barrier-stage mb-3" id="sim-entry-barrier">
+                    <div class="barrier-system">
+                        <div class="barrier-housing">
+                            <div class="traffic-light-box">
+                                <div class="traffic-led red active"></div>
+                                <div class="traffic-led green"></div>
+                            </div>
+                        </div>
+                        <div class="barrier-pivot"></div>
+                        <div class="barrier-arm"></div>
+                    </div>
+                    <div class="sim-vehicle"><i class="fas fa-car-side"></i></div>
+                    <div class="barrier-road"></div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center">
+                    <a href="{{ url_for('gate.entry_station') }}" class="btn btn-outline-success btn-sm">
+                        <i class="fas fa-qrcode me-1"></i> Open Entry Scanner
+                    </a>
+                    <button class="btn btn-success btn-sm" onclick="animateBarrierGate('sim-entry-barrier', 5)">
+                        <i class="fas fa-play me-1"></i> Trigger Entry Barrier (5s)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Exit Gate Barrier -->
+    <div class="col-lg-6">
+        <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+            <div class="card-header bg-dark text-white p-3 d-flex justify-content-between align-items-center">
+                <span class="fw-bold"><i class="fas fa-arrow-circle-left text-danger me-2"></i>Gate B: Vehicle Exit Station</span>
+                <span class="barrier-status-badge badge-closed" style="font-size:0.75rem;">CLOSED</span>
+            </div>
+
+            <div class="card-body p-4">
+                <div class="barrier-stage mb-3" id="sim-exit-barrier">
+                    <div class="barrier-system">
+                        <div class="barrier-housing" style="background: linear-gradient(135deg, #0284c7, #0369a1);">
+                            <div class="traffic-light-box">
+                                <div class="traffic-led red active"></div>
+                                <div class="traffic-led green"></div>
+                            </div>
+                        </div>
+                        <div class="barrier-pivot"></div>
+                        <div class="barrier-arm"></div>
+                    </div>
+                    <div class="sim-vehicle"><i class="fas fa-car-side"></i></div>
+                    <div class="barrier-road"></div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center">
+                    <a href="{{ url_for('gate.exit_station') }}" class="btn btn-outline-danger btn-sm">
+                        <i class="fas fa-receipt me-1"></i> Open Exit Terminal
+                    </a>
+                    <button class="btn btn-danger btn-sm" onclick="animateBarrierGate('sim-exit-barrier', 5)">
+                        <i class="fas fa-play me-1"></i> Trigger Exit Barrier (5s)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Active Parked Vehicles Ready for Exit Testing -->
+<div class="card shadow-sm border-0 rounded-4">
+    <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+        <h5 class="fw-bold mb-0 text-dark"><i class="fas fa-car text-primary me-2"></i>Active Parking Sessions (Inside Facility)</h5>
+        <span class="badge bg-info text-dark">{{ active_sessions|length }} Vehicles Parked</span>
+    </div>
+
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 small">
+                <thead class="table-light">
+                    <tr>
+                        <th>Plate Number</th>
+                        <th>Slot</th>
+                        <th>Entry Time</th>
+                        <th>Prepaid Base</th>
+                        <th>Booking ID</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in active_sessions %}
+                        <tr>
+                            <td class="fw-bold font-monospace fs-6">{{ s.vehicle_number }}</td>
+                            <td><span class="badge bg-success">{{ s.slot.slot_number }}</span> ({{ s.slot.floor_zone }})</td>
+                            <td>{{ s.entry_time.strftime('%I:%M %p') }}</td>
+                            <td>₹{{ "%.2f"|format(s.prepaid_amount) }}</td>
+                            <td><code>{{ s.booking.booking_code }}</code></td>
+                            <td>
+                                <form method="POST" action="{{ url_for('gate.exit_station') }}" class="d-inline">
+                                    <input type="hidden" name="identifier" value="{{ s.vehicle_number }}">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="fas fa-calculator me-1"></i> Bill & Exit
+                                    </button>
+                                </form>
+                                <a href="{{ url_for('public.view_pass', booking_code=s.booking.booking_code) }}" class="btn btn-sm btn-outline-primary ms-1">
+                                    <i class="fas fa-stopwatch me-1"></i> View Live Timer
+                                </a>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted">
+                                No vehicles currently inside. You can book a slot and simulate entry!
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/gate_terminal.js') }}"></script>
+{% endblock %}

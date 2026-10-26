@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Account - SmartPark{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center py-4">
+    <div class="col-md-6 col-lg-5 col-xl-4">
+        <div class="card shadow-sm border-0 rounded-4 p-4">
+            <div class="text-center mb-4">
+                <span class="brand-icon mx-auto mb-2" style="width:48px; height:48px; font-size:1.5rem;">
+                    <i class="fas fa-user-plus"></i>
+                </span>
+                <h4 class="fw-bold mb-1">Create Account</h4>
+                <p class="text-muted small">Register to track your bookings and active parking passes.</p>
+            </div>
+
+            <form method="POST" action="{{ url_for('auth.register') }}">
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">Full Name</label>
+                    <input type="text" name="full_name" class="form-control" placeholder="Rahul Sharma" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">Email Address</label>
+                    <input type="email" name="email" class="form-control" placeholder="name@example.com" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">Mobile Phone</label>
+                    <input type="tel" name="phone" class="form-control" placeholder="+91 9876543210" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">Password</label>
+                    <input type="password" name="password" class="form-control" placeholder="••••••••" required>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label small fw-semibold">Confirm Password</label>
+                    <input type="password" name="confirm_password" class="form-control" placeholder="••••••••" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-lg w-100 fw-semibold mb-3">
+                    Create Account
+                </button>
+
+                <div class="text-center small text-muted">
+                    Already registered? <a href="{{ url_for('auth.login') }}" class="text-primary fw-semibold">Sign in here</a>.
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

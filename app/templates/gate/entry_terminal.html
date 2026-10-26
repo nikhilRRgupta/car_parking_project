@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+
+{% block title %}Entry Gate Terminal & Boom Barrier - SmartPark{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <!-- Left Column: Visual Boom Barrier Simulator -->
+    <div class="col-lg-7">
+        <div class="card shadow-sm border-0 rounded-4 overflow-hidden mb-4">
+            <div class="card-header bg-dark text-white p-3 d-flex justify-content-between align-items-center">
+                <span class="fw-bold"><i class="fas fa-door-open text-success me-2"></i>Entry Gate #1 - Automated Barrier</span>
+                <span class="badge bg-secondary">Hardware Simulator</span>
+            </div>
+
+            <div class="card-body p-4">
+                <!-- Barrier Stage -->
+                <div class="barrier-stage mb-3" id="entry-barrier-visualizer">
+                    <div class="barrier-system">
+                        <div class="barrier-housing">
+                            <div class="traffic-light-box">
+                                <div class="traffic-led red active"></div>
+                                <div class="traffic-led green"></div>
+                            </div>
+                        </div>
+                        <div class="barrier-pivot"></div>
+                        <div class="barrier-arm"></div>
+                    </div>
+
+                    <div class="sim-vehicle">
+                        <i class="fas fa-car-side"></i>
+                    </div>
+
+                    <div class="barrier-road"></div>
+                </div>
+
+                <!-- Indicator & Controls -->
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="barrier-status-badge badge-closed">
+                            <i class="fas fa-lock"></i> BARRIER CLOSED
+                        </span>
+                    </div>
+                    <div>
+                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="animateBarrierGate('entry-barrier-visualizer', 5)">
+                            <i class="fas fa-play me-1"></i> Test Barrier Cycle (5s)
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Entry Gate Events -->
+        <div class="card shadow-sm border-0 rounded-4">
+            <div class="card-header bg-white py-3 border-bottom">
+                <h6 class="fw-bold mb-0 text-dark"><i class="fas fa-history text-secondary me-2"></i>Recent Entry Audit Logs</h6>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0 small">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Time</th>
+                                <th>Vehicle</th>
+                                <th>Pass ID</th>
+                                <th>Action</th>
+                                <th>Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for l in recent_logs %}
+                                <tr>
+                                    <td>{{ l.timestamp.strftime('%I:%M:%S %p') }}</td>
+                                    <td class="fw-bold font-monospace">{{ l.vehicle_number }}</td>
+                                    <td>{{ l.booking_code or 'N/A' }}</td>
+                                    <td>
+                                        <span class="badge {% if l.action == 'OPEN' %}bg-success{% elif l.action == 'DENY' %}bg-danger{% else %}bg-warning{% endif %}">
+                                            {{ l.action }}
+                                        </span>
+                                    </td>
+                                    <td class="text-truncate" style="max-width: 200px;">{{ l.reason }}</td>
+                                </tr>
+                            {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-3 text-muted">No entry logs yet.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Verification & Scanner Form -->
+    <div class="col-lg-5">
+        <div class="card shadow-sm border-0 rounded-4 p-4 mb-4">
+            <h5 class="fw-bold mb-1"><i class="fas fa-qrcode text-primary me-2"></i>Entry Scanner / Plate Input</h5>
+            <p class="text-muted small mb-4">Scan QR pass or enter vehicle plate number to authorize entrance and record entry time.</p>
+
+            <form method="POST" action="{{ url_for('gate.entry_station') }}">
+                <div class="mb-3">
+                    <label class="form-label fw-semibold small">Scan QR Pass Token or Booking ID</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light"><i class="fas fa-barcode"></i></span>
+                        <input type="text" name="identifier" class="form-control font-monospace" placeholder="e.g. PRK-20261022-XXXX" value="{{ request.form.get('identifier', '') }}" autofocus>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-semibold small">Or License Plate (Camera / Manual)</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light"><i class="fas fa-video"></i></span>
+                        <input type="text" name="vehicle_plate" class="form-control text-uppercase font-monospace" placeholder="e.g. MH12AB1234" value="{{ request.form.get('vehicle_plate', '') }}">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-lg w-100 fw-semibold shadow-sm mb-3">
+                    <i class="fas fa-shield-alt me-1"></i> Verify & Authorize Entry
+                </button>
+            </form>
+
+            <!-- Verification Feedback -->
+            {% if result %}
+                {% if result.success %}
+                    <div class="alert alert-success border-2 rounded-3 mt-2 shadow-sm" role="alert">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-check-circle fa-2x text-success me-3"></i>
+                            <div>
+                                <h6 class="alert-heading mb-0 fw-bold">ACCESS GRANTED!</h6>
+                                <div class="small">Barrier Raised &bull; Session Started</div>
+                            </div>
+                        </div>
+                        <hr class="my-2">
+                        <div class="small">
+                            <div><strong>Assigned Slot:</strong> <span class="badge bg-success fs-6">{{ result.slot_number }}</span> ({{ result.floor_zone }})</div>
+                            <div><strong>Booking Code:</strong> <code>{{ result.booking_code }}</code></div>
+                            <div><strong>Entry Recorded At:</strong> {{ result.entry_time }}</div>
+                        </div>
+                    </div>
+
+                    <!-- Hidden Auto-Trigger Data for Barrier Animation -->
+                    <div id="auto-barrier-trigger" data-action="OPEN" data-target="entry-barrier-visualizer"></div>
+                {% else %}
+                    <div class="alert alert-danger border-2 rounded-3 mt-2 shadow-sm" role="alert">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-ban fa-2x text-danger me-3"></i>
+                            <div>
+                                <h6 class="alert-heading mb-0 fw-bold">ENTRY DENIED</h6>
+                                <div class="small">{{ result.message }}</div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            {% endif %}
+        </div>
+
+        <!-- Quick Demo Shortcuts -->
+        <div class="card bg-light border p-3 rounded-4">
+            <h6 class="fw-bold mb-2 small text-uppercase text-muted"><i class="fas fa-lightbulb text-warning me-1"></i> Quick Test Credentials</h6>
+            <div class="small text-muted mb-2">You can use these seeded records to test gate entry immediately:</div>
+            <ul class="list-unstyled mb-0 small">
+                <li class="mb-1"><span class="badge bg-secondary me-1">Pass ID:</span> <code>PRK-DEMO-001</code></li>
+                <li><span class="badge bg-secondary me-1">Vehicle Plate:</span> <code>MH12AB1234</code></li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/gate_terminal.js') }}"></script>
+{% endblock %}

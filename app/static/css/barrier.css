@@ -1,0 +1,158 @@
+/* Boom Barrier Visualizer Styles */
+
+.barrier-stage {
+    background: linear-gradient(180deg, #e2e8f0 0%, #cbd5e1 100%);
+    border-radius: 16px;
+    padding: 30px 20px;
+    position: relative;
+    overflow: hidden;
+    min-height: 280px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    box-shadow: inset 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.barrier-road {
+    height: 60px;
+    background: #334155;
+    position: relative;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.barrier-road::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 4px;
+    background: repeating-linear-gradient(90deg, #f8fafc 0, #f8fafc 30px, transparent 30px, transparent 60px);
+}
+
+.barrier-system {
+    position: absolute;
+    bottom: 50px;
+    left: 40px;
+    display: flex;
+    align-items: flex-end;
+    z-index: 10;
+}
+
+/* Barrier Base Housing */
+.barrier-housing {
+    width: 44px;
+    height: 120px;
+    background: linear-gradient(135deg, #f97316, #ea580c);
+    border-radius: 6px 6px 0 0;
+    position: relative;
+    box-shadow: 2px 4px 10px rgba(0,0,0,0.25);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 10px;
+}
+
+/* Traffic LED Signal */
+.traffic-light-box {
+    background: #1e293b;
+    border-radius: 12px;
+    padding: 4px 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.traffic-led {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #475569;
+    transition: all 0.3s ease;
+}
+
+.traffic-led.red.active {
+    background: #ef4444;
+    box-shadow: 0 0 12px #ef4444;
+}
+
+.traffic-led.green.active {
+    background: #10b981;
+    box-shadow: 0 0 12px #10b981;
+}
+
+/* Barrier Pivot & Arm */
+.barrier-pivot {
+    position: absolute;
+    top: 20px;
+    left: 28px;
+    width: 22px;
+    height: 22px;
+    background: #1e293b;
+    border-radius: 50%;
+    z-index: 20;
+    box-shadow: 0 0 4px rgba(0,0,0,0.5);
+}
+
+.barrier-arm {
+    position: absolute;
+    top: 27px;
+    left: 36px;
+    width: 240px;
+    height: 10px;
+    background: repeating-linear-gradient(
+        -45deg,
+        #dc2626,
+        #dc2626 15px,
+        #ffffff 15px,
+        #ffffff 30px
+    );
+    border-radius: 5px;
+    transform-origin: 0% 50%;
+    transform: rotate(0deg);
+    transition: transform 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+    z-index: 15;
+}
+
+/* Raised Barrier State */
+.barrier-system.open .barrier-arm {
+    transform: rotate(-75deg);
+}
+
+/* Vehicle Simulation */
+.sim-vehicle {
+    position: absolute;
+    bottom: 55px;
+    right: 40px;
+    font-size: 3rem;
+    color: #1e293b;
+    transition: all 1.2s ease-in-out;
+}
+
+.sim-vehicle.passing {
+    transform: translateX(-240px);
+    opacity: 0.2;
+}
+
+/* Barrier Terminal Status Indicator */
+.barrier-status-badge {
+    font-weight: 700;
+    font-size: 0.9rem;
+    padding: 6px 14px;
+    border-radius: 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.badge-closed {
+    background-color: #fee2e2;
+    color: #991b1b;
+}
+
+.badge-open {
+    background-color: #d1fae5;
+    color: #065f46;
+}

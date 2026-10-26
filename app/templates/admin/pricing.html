@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+
+{% block title %}Pricing Rules Configuration - SmartPark Admin{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold mb-1"><i class="fas fa-tags text-primary me-2"></i>Time-Based Pricing Engine Rules</h3>
+        <p class="text-muted small mb-0">Configure base duration rates, hourly overtime fees, and grace periods per vehicle class.</p>
+    </div>
+</div>
+
+<form method="POST" action="{{ url_for('admin.pricing_manager') }}">
+    <div class="row g-4">
+        <!-- 4-Wheeler -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0 rounded-4 overflow-hidden h-100">
+                <div class="card-header bg-primary text-white p-3">
+                    <h5 class="fw-bold mb-0"><i class="fas fa-car me-2"></i>Four-Wheelers (Cars)</h5>
+                </div>
+                <div class="card-body p-4">
+                    {% set r = rules.get('4-wheeler') %}
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Base Duration (Hours)</label>
+                        <input type="number" name="base_hours_4-wheeler" class="form-control" value="{{ r.base_hours if r else 4 }}" min="1" max="24" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Base Rate (₹ for base hours)</label>
+                        <input type="number" step="0.5" name="base_rate_4-wheeler" class="form-control font-monospace" value="{{ "%.2f"|format(r.base_rate if r else 50.0) }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Hourly Rate After Base (₹/hr)</label>
+                        <input type="number" step="0.5" name="hourly_rate_4-wheeler" class="form-control font-monospace" value="{{ "%.2f"|format(r.hourly_rate_after_base if r else 20.0) }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Grace Period (Minutes)</label>
+                        <input type="number" name="grace_4-wheeler" class="form-control" value="{{ r.grace_period_minutes if r else 15 }}" min="0" max="60" required>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2-Wheeler -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0 rounded-4 overflow-hidden h-100">
+                <div class="card-header bg-warning text-dark p-3">
+                    <h5 class="fw-bold mb-0"><i class="fas fa-motorcycle me-2"></i>Two-Wheelers (Bikes)</h5>
+                </div>
+                <div class="card-body p-4">
+                    {% set r = rules.get('2-wheeler') %}
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Base Duration (Hours)</label>
+                        <input type="number" name="base_hours_2-wheeler" class="form-control" value="{{ r.base_hours if r else 4 }}" min="1" max="24" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Base Rate (₹ for base hours)</label>
+                        <input type="number" step="0.5" name="base_rate_2-wheeler" class="form-control font-monospace" value="{{ "%.2f"|format(r.base_rate if r else 20.0) }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Hourly Rate After Base (₹/hr)</label>
+                        <input type="number" step="0.5" name="hourly_rate_2-wheeler" class="form-control font-monospace" value="{{ "%.2f"|format(r.hourly_rate_after_base if r else 10.0) }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Grace Period (Minutes)</label>
+                        <input type="number" name="grace_2-wheeler" class="form-control" value="{{ r.grace_period_minutes if r else 15 }}" min="0" max="60" required>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- EV -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0 rounded-4 overflow-hidden h-100">
+                <div class="card-header bg-success text-white p-3">
+                    <h5 class="fw-bold mb-0"><i class="fas fa-charging-station me-2"></i>Electric Vehicles (EV)</h5>
+                </div>
+                <div class="card-body p-4">
+                    {% set r = rules.get('ev') %}
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Base Duration (Hours)</label>
+                        <input type="number" name="base_hours_ev" class="form-control" value="{{ r.base_hours if r else 4 }}" min="1" max="24" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Base Rate (₹ for base hours)</label>
+                        <input type="number" step="0.5" name="base_rate_ev" class="form-control font-monospace" value="{{ "%.2f"|format(r.base_rate if r else 40.0) }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Hourly Rate After Base (₹/hr)</label>
+                        <input type="number" step="0.5" name="hourly_rate_ev" class="form-control font-monospace" value="{{ "%.2f"|format(r.hourly_rate_after_base if r else 15.0) }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Grace Period (Minutes)</label>
+                        <input type="number" name="grace_ev" class="form-control" value="{{ r.grace_period_minutes if r else 15 }}" min="0" max="60" required>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="col-12 text-end">
+            <button type="submit" class="btn btn-primary btn-lg px-4 fw-semibold shadow-sm">
+                <i class="fas fa-save me-1"></i> Update Pricing Engine Rules
+            </button>
+        </div>
+    </div>
+</form>
+{% endblock %}

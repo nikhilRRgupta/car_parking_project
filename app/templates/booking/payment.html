@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+
+{% block title %}Checkout & Online Payment - SmartPark{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center py-3">
+    <div class="col-lg-7 col-xl-6">
+        <div class="card shadow-sm border-0 rounded-4 overflow-hidden mb-4">
+            <div class="card-header bg-primary text-white p-4">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="badge bg-light text-primary fw-bold text-uppercase">Payment Sandbox</span>
+                    <div class="d-flex align-items-center text-white small">
+                        <i class="fas fa-hourglass-half me-1"></i> Slot Held For: 
+                        <strong class="ms-1 font-monospace" id="hold-countdown">10:00</strong>
+                    </div>
+                </div>
+                <h4 class="fw-bold mb-0">Confirm & Pay for Parking</h4>
+            </div>
+
+            <div class="card-body p-4">
+                <!-- Summary Card -->
+                <div class="bg-light p-3 rounded-3 border mb-4">
+                    <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-2">
+                        <span class="text-muted small">Booking Reference:</span>
+                        <strong class="text-primary font-monospace">{{ booking.booking_code }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="text-muted small">Vehicle Plate:</span>
+                        <strong class="text-dark">{{ booking.vehicle_number }} ({{ booking.vehicle_type }})</strong>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="text-muted small">Assigned Slot:</span>
+                        <span class="badge bg-success">{{ booking.slot.slot_number }} ({{ booking.slot.floor_zone }})</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center border-top pt-2 mt-2">
+                        <span class="fw-bold text-dark">Total Amount Due:</span>
+                        <span class="h4 text-success fw-bold mb-0">₹{{ "%.2f"|format(booking.base_amount) }}</span>
+                    </div>
+                </div>
+
+                <!-- Payment Form with Tabs -->
+                <ul class="nav nav-pills nav-fill mb-3" id="paymentTabs" role="tablist">
+                    <li class="nav-item">
+                        <button class="nav-link active fw-semibold" id="upi-tab" data-bs-toggle="pill" data-bs-target="#tab-upi" type="button">
+                            <i class="fas fa-qrcode me-1"></i> UPI / QR Scan
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link fw-semibold" id="card-tab" data-bs-toggle="pill" data-bs-target="#tab-card" type="button">
+                            <i class="fas fa-credit-card me-1"></i> Card Sandbox
+                        </button>
+                    </li>
+                </ul>
+
+                <div class="tab-content" id="paymentTabContent">
+                    <!-- UPI Tab -->
+                    <div class="tab-pane fade show active text-center py-2" id="tab-upi">
+                        <div class="p-3 border rounded-3 bg-white mb-3 d-inline-block shadow-sm">
+                            <!-- Simulated Dynamic UPI QR SVG -->
+                            <svg width="180" height="180" viewBox="0 0 100 100" class="border p-2 rounded">
+                                <rect width="100" height="100" fill="#ffffff"/>
+                                <path d="M10 10h30v30h-30z M15 15h20v20h-20z M60 10h30v30h-30z M65 15h20v20h-20z M10 60h30v30h-30z M15 65h20v20h-20z M45 15h10v10h-10z M45 35h10v10h-10z M15 45h10v10h-10z M75 45h10v10h-10z M45 60h10v10h-10z M60 60h10v10h-10z M75 75h15v15h-15z M60 80h10v10h-10z" fill="#0f172a"/>
+                            </svg>
+                            <div class="small text-muted mt-2">Scan with any UPI App (GPay / PhonePe / Paytm)</div>
+                            <div class="badge bg-light text-dark border font-monospace mt-1">VPA: smartpark@bank</div>
+                        </div>
+
+                        <form method="POST" action="{{ url_for('booking.process_payment', booking_id=booking.id) }}">
+                            <input type="hidden" name="payment_method" value="UPI">
+                            <button type="submit" class="btn btn-success btn-lg w-100 fw-semibold shadow-sm">
+                                <i class="fas fa-check-circle me-1"></i> Verify & Pay ₹{{ "%.2f"|format(booking.base_amount) }} (Instant Sandbox UPI)
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Card Tab -->
+                    <div class="tab-pane fade py-2" id="tab-card">
+                        <form method="POST" action="{{ url_for('booking.process_payment', booking_id=booking.id) }}">
+                            <input type="hidden" name="payment_method" value="CARD">
+
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold">Card Number (Sandbox Test Card)</label>
+                                <input type="text" class="form-control font-monospace" value="4532 &bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; 8912" readonly>
+                            </div>
+
+                            <div class="row g-2 mb-3">
+                                <div class="col-6">
+                                    <label class="form-label small fw-semibold">Expiry Date</label>
+                                    <input type="text" class="form-control" value="12/28" readonly>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label small fw-semibold">CVV</label>
+                                    <input type="password" class="form-control font-monospace" value="892" readonly>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary btn-lg w-100 fw-semibold shadow-sm">
+                                <i class="fas fa-lock me-1"></i> Authorize & Pay ₹{{ "%.2f"|format(booking.base_amount) }}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="text-center mt-4 pt-3 border-top">
+                    <form method="POST" action="{{ url_for('booking.cancel_reservation', booking_id=booking.id) }}">
+                        <button type="submit" class="btn btn-link text-danger text-decoration-none small" onclick="return confirm('Release this slot reservation?')">
+                            <i class="fas fa-times me-1"></i> Cancel reservation and release slot
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let remainingSeconds = {{ seconds_remaining }};
+    const countdownEl = document.getElementById('hold-countdown');
+
+    function updateHoldTimer() {
+        if (remainingSeconds <= 0) {
+            countdownEl.textContent = 'EXPIRED';
+            alert('Your 10-minute slot reservation has expired. Returning to parking map.');
+            window.location.href = "{{ url_for('public.index') }}";
+            return;
+        }
+        const m = Math.floor(remainingSeconds / 60);
+        const s = remainingSeconds % 60;
+        countdownEl.textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        remainingSeconds--;
+    }
+
+    setInterval(updateHoldTimer, 1000);
+    updateHoldTimer();
+</script>
+{% endblock %}
