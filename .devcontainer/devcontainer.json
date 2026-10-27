@@ -6,7 +6,7 @@
   "portsAttributes": {
     "5000": {
       "label": "Smart Parking Web App",
-      "onAutoForward": "openBrowser"
+      "visibility": "public"
     }
   }
 }
