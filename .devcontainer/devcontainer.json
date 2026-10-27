@@ -1,0 +1,12 @@
+{
+  "name": "Smart Parking System",
+  "image": "mcr.microsoft.com/devcontainers/python:3.11",
+  "postCreateCommand": "pip install -r requirements.txt && python database/seed_data.py",
+  "forwardPorts": [5000],
+  "portsAttributes": {
+    "5000": {
+      "label": "Smart Parking Web App",
+      "onAutoForward": "openBrowser"
+    }
+  }
+}
